@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paradox – in-browser preview VM</title>
+<style>body{margin:0;background:#0b0d12;color:#e8ecf3;font:15px system-ui,sans-serif;padding:14px}a{color:#5bd1ff}
+#bar{height:10px;background:#ffffff1a;border-radius:5px;overflow:hidden;max-width:640px}#bar i{display:block;height:100%;width:0;background:#5bd1ff}
+#screen{margin-top:10px}#screen canvas{display:none}button{font:inherit;padding:8px 12px;border-radius:7px;border:0;background:#5bd1ff;color:#000}
+.note{background:#ffd16622;border:1px solid #ffd16655;padding:10px;border-radius:8px;max-width:640px}</style></head><body>
+<p><a href="index.html">&larr; Paradox shell</a></p>
+<div class="note"><b>This is a lightweight in-browser preview.</b> It runs a tiny Linux (the v86 project's Buildroot test image, ~10 MB) in an x86 emulator inside this page, entirely offline after loading. It is <b>not</b> the full Paradox OS: the full OS image is in the Downloads list on the main page. Nothing is saved when you close this tab.</div>
+<p><button id="go">Start preview VM (~12 MB download)</button> <span id="st"></span></p>
+<div id="bar"><i></i></div>
+<div id="screen"><div style="white-space:pre;font:14px monospace;line-height:14px"></div><canvas></canvas></div>
+<p style="font-size:12px;color:#8a93a6">Credits: v86 (BSD-2-Clause, v86/LICENSE-v86-BSD-2-Clause.txt), SeaBIOS (LGPLv3, v86/COPYING-seabios.txt), Buildroot image (GPL; source: github.com/copy/images). See NOTICE.txt.</p>
+<script src="v86/libv86.js"></script>
+<script>
+"use strict";
+const st=document.getElementById("st"),bar=document.querySelector("#bar i");
+document.getElementById("go").onclick=function(){this.disabled=true;st.textContent="Loading…";
+ const emu=new V86({wasm_path:"v86/v86.wasm",memory_size:64*1024*1024,vga_memory_size:2*1024*1024,
+  screen_container:document.getElementById("screen"),bios:{url:"v86/seabios.bin"},vga_bios:{url:"v86/vgabios.bin"},
+  bzimage:{url:"images/buildroot-bzimage68.bin",async:false},autostart:true});
+ emu.add_listener("download-progress",e=>{if(e.total){const p=Math.round(100*e.loaded/e.total);bar.style.width=p+"%";st.textContent="Loading "+e.file_name.split("/").pop()+" "+p+"%"}});
+ emu.add_listener("emulator-ready",()=>{bar.style.width="100%";st.textContent="Booting… click the screen and type once you see a prompt."});
+};
+</script></body></html>

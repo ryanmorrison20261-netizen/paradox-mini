@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paradox</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:">
+<style>
+:root{--bg:#0b0d12;--fg:#e8ecf3;--mut:#8a93a6;--acc:#5bd1ff;--pan:#151a24cc}
+[data-theme=light]{--bg:#f3f5f9;--fg:#141821;--mut:#5b6476;--pan:#ffffffd9}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px system-ui,sans-serif;overflow:hidden}
+#desk{position:fixed;inset:0;background-size:cover;background-position:center}
+.w{position:absolute;background:var(--pan);border:1px solid #ffffff22;border-radius:10px;padding:8px;min-width:120px;min-height:50px;backdrop-filter:blur(6px);touch-action:none}
+.w h4{margin:0 0 6px;font-size:13px;color:var(--mut);cursor:move;user-select:none;display:flex;justify-content:space-between}
+.w h4 b{cursor:pointer;color:#ff6b6b}
+#handle{position:fixed;right:10px;bottom:10px;width:44px;height:44px;border-radius:50%;background:var(--acc);color:#000;border:0;font-size:22px;z-index:20}
+.sheet{position:fixed;inset:auto 0 0 0;max-height:85%;overflow:auto;background:var(--pan);backdrop-filter:blur(10px);padding:16px;z-index:30;border-top:1px solid #ffffff33;display:none}
+.sheet.on{display:block}button,select,input{font:inherit;padding:7px 10px;border-radius:7px;border:1px solid #ffffff33;background:#ffffff14;color:var(--fg);margin:3px}
+.row{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.mut{color:var(--mut);font-size:13px}
+#welcome{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:40;background:var(--bg)}
+#welcome.on{display:flex}#welcome .card{max-width:520px;width:92%;padding:22px;background:var(--pan);border-radius:14px}
+label{display:block;margin:8px 0 2px;font-size:13px;color:var(--mut)}#welcome input,#welcome select{width:100%}
+code{background:#ffffff14;padding:1px 5px;border-radius:4px}table{border-collapse:collapse;font-size:13px}td,th{padding:4px 8px;border-bottom:1px solid #ffffff22;text-align:left;word-break:break-all}
+</style></head><body>
+<div id="desk" aria-label="Paradox desktop (blank)"></div>
+<button id="handle" title="Layout editor (Alt+L)" aria-label="Open layout editor">&#9776;</button>
+
+<div id="welcome"><div class="card">
+<h2 style="margin-top:0">Welcome to Paradox</h2>
+<p class="mut">Base settings. Every field is optional and starts blank. This is a browser preview: settings stay in this browser only. No password is asked or stored here.</p>
+<label>Language</label><input id="s_lang" placeholder="e.g. en-US">
+<label>Keyboard layout</label><input id="s_kbd" placeholder="e.g. us">
+<label>Time zone</label><input id="s_tz" placeholder="e.g. Europe/Paris">
+<label>Computer name</label><input id="s_host" placeholder="e.g. paradox">
+<label>Theme</label><select id="s_theme"><option value="">(skip)</option><option>dark</option><option>light</option></select>
+<label>Display scale</label><select id="s_scale"><option value="">(skip)</option><option>1</option><option>1.25</option><option>1.5</option><option>2</option></select>
+<div class="row" style="margin-top:12px"><button id="w_save">Save</button><button id="w_skip">Skip</button></div>
+</div></div>
+
+<div id="ed" class="sheet">
+<div class="row"><b>Layout editor</b><span class="mut">(blank by default &mdash; we build it together)</span><span style="flex:1"></span><button data-x="close">Close</button></div>
+<div class="row"><span class="mut">Add:</span><button data-add="panel">Panel</button><button data-add="clock">Clock</button><button data-add="note">Note</button><button data-add="launcher">App launcher</button></div>
+<div class="row"><span class="mut">Wallpaper:</span><input id="wp" placeholder="color (#123) or image URL"><button data-x="wp">Set</button></div>
+<div class="row"><button data-x="undo">Undo</button><button data-x="snap">Snapshot</button><button data-x="restore">Restore snapshot</button><button data-x="reset">Reset to blank</button></div>
+<div class="row"><button data-x="export">Export JSON</button><label style="display:inline;margin:0"><input type="file" id="imp" accept="application/json" style="display:none"><span class="mut" style="cursor:pointer;text-decoration:underline" onclick="document.getElementById('imp').click()">Import JSON</span></label><button data-x="welcome">Base settings</button></div>
+<hr style="border-color:#ffffff22">
+<h3>Try the OS in this browser</h3>
+<p class="mut">This is a lightweight in-browser preview (x86 emulator, see vm.html). The full OS is the downloads below.</p>
+<p><a href="vm.html" style="color:var(--acc)">Open in-browser VM preview</a></p>
+<h3>Downloads</h3><div id="dl" class="mut">Loading downloads list&hellip;</div>
+<p class="mut">Run on a Mac (Apple silicon) with UTM: Create &rarr; Virtualize &rarr; Linux &rarr; import <code>paradox-mini-arm64.qcow2</code> (UEFI). Or with QEMU:<br>
+<code>zstd -d paradox-mini-arm64.qcow2.zst &amp;&amp; qemu-system-aarch64 -M virt -accel hvf -cpu host -m 2048 -bios edk2-aarch64-code.fd -drive file=paradox-mini-arm64.qcow2,if=virtio,snapshot=on -nographic</code><br>
+x86_64 PC: <code>qemu-system-x86_64 -m 2048 -bios OVMF.fd -drive file=paradox-mini-amd64.qcow2,if=virtio,snapshot=on -nographic</code><br>
+<code>snapshot=on</code> keeps the disk throwaway. Verify files with <code>sha256sum -c SHA256SUMS</code>. First login: user <code>paradox</code>, you set the password at a masked prompt.</p>
+</div>
+
+<script>
+"use strict";
+const K="paradox.layout.v1",KS="paradox.settings.v1",KH="paradox.history.v1",KP="paradox.snapshot.v1";
+const blank=()=>({version:1,wallpaper:"",widgets:[]});
+const get=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
+const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let L=get(K,blank()),hist=get(KH,[]);
+const desk=document.getElementById("desk"),ed=document.getElementById("ed");
+function save(push){if(push){hist.push(JSON.stringify(L));if(hist.length>50)hist.shift();put(KH,hist)}put(K,L);render()}
+function clean(o){if(!o||typeof o!=="object"||!Array.isArray(o.widgets))return blank();
+ return{version:1,wallpaper:String(o.wallpaper||"").slice(0,500),widgets:o.widgets.slice(0,100).map(w=>({id:String(w.id||Math.random().toString(36).slice(2)),type:["panel","clock","note","launcher"].includes(w.type)?w.type:"panel",x:+w.x||20,y:+w.y||20,w:+w.w||220,h:+w.h||90,text:String(w.text||"").slice(0,2000)}))}}
+function render(){
+ const wp=L.wallpaper;desk.style.background="";desk.style.backgroundImage="";
+ if(/^#[0-9a-f]{3,8}$/i.test(wp))desk.style.background=wp;else if(/^(https?:|data:image\/)/i.test(wp))desk.style.backgroundImage="url("+JSON.stringify(wp)+")";
+ desk.textContent="";
+ for(const w of L.widgets){const d=document.createElement("div");d.className="w";d.style.cssText=`left:${w.x}px;top:${w.y}px;width:${w.w}px;min-height:${w.h}px`;
+  const h=document.createElement("h4");h.textContent=w.type;const x=document.createElement("b");x.textContent="\u00d7";x.title="Remove";x.onclick=()=>{L.widgets=L.widgets.filter(v=>v!==w);save(true)};h.appendChild(x);d.appendChild(h);
+  const b=document.createElement("div");
+  if(w.type==="clock"){b.className="clk";b.textContent=new Date().toLocaleTimeString()}
+  else{b.contentEditable="true";b.textContent=w.text||(w.type==="launcher"?"App name or link":"");b.onblur=()=>{if(b.textContent!==w.text){w.text=b.textContent;save(true)}}}
+  d.appendChild(b);drag(h,d,w);desk.appendChild(d)}}
+function drag(h,d,w){h.onpointerdown=e=>{if(e.target.tagName==="B")return;const sx=e.clientX-w.x,sy=e.clientY-w.y;h.setPointerCapture(e.pointerId);
+ h.onpointermove=m=>{w.x=Math.max(0,m.clientX-sx);w.y=Math.max(0,m.clientY-sy);d.style.left=w.x+"px";d.style.top=w.y+"px"};
+ h.onpointerup=()=>{h.onpointermove=null;save(true)}}}
+setInterval(()=>document.querySelectorAll(".clk").forEach(c=>c.textContent=new Date().toLocaleTimeString()),1000);
+document.getElementById("handle").onclick=()=>ed.classList.toggle("on");
+addEventListener("keydown",e=>{if(e.altKey&&e.key.toLowerCase()==="l"){ed.classList.toggle("on");e.preventDefault()}});
+ed.addEventListener("click",e=>{const a=e.target.dataset.add,x=e.target.dataset.x;
+ if(a){L.widgets.push({id:Math.random().toString(36).slice(2),type:a,x:30+L.widgets.length*20,y:30+L.widgets.length*20,w:220,h:90,text:""});save(true)}
+ if(x==="close")ed.classList.remove("on");
+ if(x==="wp"){L.wallpaper=document.getElementById("wp").value.trim();save(true)}
+ if(x==="undo"&&hist.length){L=clean(JSON.parse(hist.pop()));put(KH,hist);save(false)}
+ if(x==="snap"){put(KP,L)}
+ if(x==="restore"){const s=get(KP,null);if(s){L=clean(s);save(true)}}
+ if(x==="reset"&&confirm("Reset the layout to blank?")){L=blank();save(true)}
+ if(x==="export"){const u=URL.createObjectURL(new Blob([JSON.stringify(L,null,1)],{type:"application/json"}));const l=document.createElement("a");l.href=u;l.download="paradox-layout.json";l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+ if(x==="welcome")openW()});
+document.getElementById("imp").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{L=clean(JSON.parse(t));save(true)}).catch(()=>alert("Not a valid layout file"))};
+const S=get(KS,{}),F={lang:"s_lang",kbd:"s_kbd",tz:"s_tz",host:"s_host",theme:"s_theme",scale:"s_scale"};
+function applyS(){document.documentElement.dataset.theme=S.theme||"dark";document.body.style.zoom=S.scale||""}
+function openW(){for(const k in F)document.getElementById(F[k]).value=S[k]||"";document.getElementById("welcome").classList.add("on")}
+document.getElementById("w_save").onclick=()=>{for(const k in F){const v=document.getElementById(F[k]).value.trim().slice(0,100);if(v)S[k]=v;else delete S[k]}S.welcome_done=true;put(KS,S);applyS();document.getElementById("welcome").classList.remove("on")};
+document.getElementById("w_skip").onclick=()=>{S.welcome_done=true;put(KS,S);document.getElementById("welcome").classList.remove("on")};
+applyS();render();if(!S.welcome_done)openW();
+// Downloads: optional downloads/SHA256SUMS next to this page (relative URL); absent in the in-image copy.
+fetch("downloads/SHA256SUMS").then(r=>r.ok?r.text():Promise.reject()).then(t=>{const tb=document.createElement("table");tb.innerHTML="<tr><th>File</th><th>sha256</th></tr>";
+ for(const ln of t.trim().split("\n")){const m=ln.match(/^([0-9a-f]{64})\s+\*?(\S+)$/);if(!m)continue;const tr=document.createElement("tr"),a=document.createElement("a");a.href="https://github.com/ryanmorrison20261-netizen/paradox-mini/releases/download/v0.1-mini/"+encodeURIComponent(m[2]);a.textContent=m[2];a.style.color="var(--acc)";const t1=document.createElement("td");t1.appendChild(a);const t2=document.createElement("td");t2.textContent=m[1];tr.append(t1,t2);tb.appendChild(tr)}
+ const dl=document.getElementById("dl");dl.textContent="";dl.appendChild(tb)}).catch(()=>{document.getElementById("dl").textContent="No downloads published with this copy."});
+</script></body></html>

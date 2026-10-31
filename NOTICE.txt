@@ -1,0 +1,5 @@
+Paradox web bundle - third-party components (vendored, served locally; no CDN):
+- v86 0.5.473 (npm "v86"), BSD-2-Clause: v86/libv86.js, v86/v86.wasm. License: v86/LICENSE-v86-BSD-2-Clause.txt. https://github.com/copy/v86
+- SeaBIOS / VGA BIOS binaries from the v86 repo bios/ dir, LGPLv3: v86/seabios.bin, v86/vgabios.bin. License: v86/COPYING-seabios.txt. Source: https://www.seabios.org
+- images/buildroot-bzimage68.bin: v86 project's Buildroot Linux test image (Linux kernel + busybox, GPLv2). Fetched from https://i.copy.sh/buildroot-bzimage68.bin. Build config/source: https://github.com/copy/images
+Why not the Debian mini image in the browser: v86 emulates a 32-bit x86 CPU (no x86_64), so the amd64 Debian image cannot boot in it.
