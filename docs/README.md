@@ -19,6 +19,35 @@ This project is intentionally lightweight and self-contained:
 - `downloads/` contains packaged disk image artifacts for distribution.
 - `images/` stores static project assets and screenshots.
 
+## Pattern policies and conditions of use
+
+The base model is intended to be free for everyone and is designed to be broadly accessible rather than restricted behind a paywall or access gate.
+
+### Pattern policy
+
+- Keep the platform open, transparent, and usable by default.
+- Prioritize simple, stable, repeatable patterns over hidden complexity.
+- Design for compatibility, auditability, and safe deployment.
+- Make the system understandable to technical and non-technical users.
+
+### Strict conditions of use
+
+- The base model is free for everyone unless specific paid or premium features are explicitly added in a future version.
+- Do not use the system for fraud, impersonation, spam, abuse, or malicious automation.
+- Do not attempt to bypass safeguards, reverse engineering controls, or exploit access boundaries.
+- Do not submit or process sensitive personal data, regulated data, or confidential information without appropriate authorization.
+- Do not generate or distribute harmful, deceptive, illegal, or dangerous content.
+- Respect privacy, security, licensing, and platform integrity at all times.
+- Maintain transparency about model behavior, assumptions, and limits.
+- Any deployment or public use should remain aligned with the project’s safety and respect standards.
+
+### Access and fairness principles
+
+- Access should remain fair and broadly available.
+- The base model should not be locked behind unnecessary barriers.
+- Public use must remain consistent with safety, legal, and operational constraints.
+- If premium or enterprise functionality is added later, it must be clearly separated from the free base model.
+
 ## Multi-bot system concept
 
 To support a stronger operational model, the repository can be framed around a single coordinating bot and four supporting specialist bots that share the workload and connect together to make the overall system more complete.
