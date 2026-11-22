@@ -1,0 +1,42 @@
+name: Paradox Mini release artifact verification
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "downloads/SHA256SUMS"
+      - ".github/workflows/release-artifact-verification.yml"
+      - "README.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-release-images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install zstd and QEMU image inspection tools
+        run: sudo apt-get update && sudo apt-get install -y zstd qemu-utils
+      - name: Download published release artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p downloads
+          base="https://github.com/ryanmorrison20261-netizen/paradox-mini/releases/download/v0.1-mini"
+          curl --fail --show-error --location --retry 3 "$base/paradox-mini-amd64.qcow2.zst" -o downloads/paradox-mini-amd64.qcow2.zst
+          curl --fail --show-error --location --retry 3 "$base/paradox-mini-arm64.qcow2.zst" -o downloads/paradox-mini-arm64.qcow2.zst
+      - name: Verify published SHA-256 checksums
+        run: |
+          cd downloads
+          sha256sum --check SHA256SUMS
+      - name: Verify zstd streams and qcow2 image metadata
+        run: |
+          set -euo pipefail
+          for arch in amd64 arm64; do
+            zstd --test "downloads/paradox-mini-$arch.qcow2.zst"
+            zstd --decompress --stdout "downloads/paradox-mini-$arch.qcow2.zst" > "/tmp/paradox-mini-$arch.qcow2"
+            qemu-img info --output=json "/tmp/paradox-mini-$arch.qcow2" > "/tmp/paradox-mini-$arch-info.json"
+            python -c "import json,sys; d=json.load(open(sys.argv[1])); assert d['format']=='qcow2', d; print(sys.argv[1], d['format'], d['virtual-size'])" "/tmp/paradox-mini-$arch-info.json"
+          done
